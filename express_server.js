@@ -2,8 +2,6 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
-
-
 app.set("view engine", "ejs");
 
 
@@ -47,6 +45,15 @@ app.post("/urls", (req, res) => {
   
   //Redirect to /urls/:shortURL, where shortURL is the random string we generated
   res.redirect(`/urls/${newShortUrl}`); 
+});
+
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = req.params.shortURL;
+  const urlDatabaseLongUrl = urlDatabase[longURL];
+  
+  //Redirect based on the shortURL from our urlDataBase;
+  res.redirect(urlDatabaseLongUrl);
+
 });
 
 app.listen(PORT, () => {
