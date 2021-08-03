@@ -65,6 +65,19 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect('/urls/'); 
 });
 
+//Route to edit the longURL for the given shortURL
+
+app.post("/urls/:id", (req, res) => {
+  const newShortUrl = req.params.id;
+  const newLongUrl = req.body.longURL;
+  urlDatabase[newShortUrl] = newLongUrl; 
+  
+  //Redirect to /urls/
+  res.redirect('/urls/'); 
+});
+
+
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
