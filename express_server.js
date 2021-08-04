@@ -1,7 +1,9 @@
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
+var cookieParser = require('cookie-parser')
 
+app.use(cookieParser());
 app.set("view engine", "ejs");
 
 
@@ -17,17 +19,23 @@ const urlDatabase = {
 };
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  
+  const templateVars = {username: req.cookies.username}
+  res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies.username};
   res.render("urls_show", templateVars);
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase}
+
+  const templateVars = { urls: urlDatabase, username: req.cookies.username}
+  
   res.render("urls_index", templateVars);
+
+
 });
 
 app.get("/urls.json", (req, res) => {
@@ -42,7 +50,7 @@ app.post("/urls", (req, res) => {
   
   const newShortUrl = randomGenerator();
   urlDatabase[newShortUrl] = req.body.longURL; 
-  
+
   //Redirect to /urls/:shortURL, where shortURL is the random string we generated
   res.redirect(`/urls/${newShortUrl}`); 
 });
@@ -60,7 +68,7 @@ app.get("/u/:shortURL", (req, res) => {
 app.post("/urls/:shortURL/delete", (req, res) => {
   const newShortUrl = req.params.shortURL;
   delete urlDatabase[newShortUrl];
-  
+
   //Redirect to /urls/
   res.redirect('/urls/'); 
 });
@@ -76,6 +84,25 @@ app.post("/urls/:id", (req, res) => {
   res.redirect('/urls/'); 
 });
 
+//Storing Username as a cookie
+
+app.post("/login", (req, res) => {
+
+  res.cookie('username', req.body.username);
+  
+  const cookie = {'username': req.body.username};  
+    //Redirect to /urls/
+  res.redirect('/urls/'); 
+});
+
+//Logout Username by deleting the cookie
+
+app.post("/logout", (req, res) => {
+   
+  res.clearCookie('username', req.body.username);
+  //Redirect to /urls/
+   res.redirect("/urls/")
+});
 
 
 app.listen(PORT, () => {
