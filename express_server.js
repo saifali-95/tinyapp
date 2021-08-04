@@ -3,6 +3,7 @@ const app = express();
 const PORT = 8080; // default port 8080
 var cookieParser = require('cookie-parser')
 
+
 app.use(cookieParser());
 app.set("view engine", "ejs");
 
@@ -25,25 +26,30 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
+  
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies.username};
   res.render("urls_show", templateVars);
+
 });
 
 app.get("/urls", (req, res) => {
 
   const templateVars = { urls: urlDatabase, username: req.cookies.username}
-  
   res.render("urls_index", templateVars);
 
 
 });
 
 app.get("/urls.json", (req, res) => {
+  
   res.json(urlDatabase);
+
 });
 
 app.get("/hello", (req, res) => {
+  
   res.send("<html><body>Hello <b>World</b></body></html>\n");
+
 });
 
 app.post("/urls", (req, res) => {
@@ -53,6 +59,7 @@ app.post("/urls", (req, res) => {
 
   //Redirect to /urls/:shortURL, where shortURL is the random string we generated
   res.redirect(`/urls/${newShortUrl}`); 
+
 });
 
 app.get("/u/:shortURL", (req, res) => {
@@ -61,6 +68,14 @@ app.get("/u/:shortURL", (req, res) => {
   
   //Redirect based on the shortURL from our urlDataBase;
   res.redirect(urlDatabaseLongUrl);
+
+});
+
+//Redirecting to registration page
+
+app.get("/register", (req, res) => {
+  
+  res.render("register");
 
 });
 
@@ -103,7 +118,6 @@ app.post("/logout", (req, res) => {
   //Redirect to /urls/
    res.redirect("/urls/")
 });
-
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
