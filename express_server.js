@@ -25,6 +25,44 @@ function randomGenerator() {
   return randomString;
 }
 
+//Login Authentication Function
+
+function loginAuthentication(req, res){
+  
+  for(const key in users) {  
+    if (users[key]['email'] === req.body.email && users[key]['password'] === req.body.password) {
+      res.cookie('user_id', key);
+      return true;
+    }
+  }
+  return false;
+}
+
+//Account Registration Verification Function
+
+function registerVerification(req, res) {
+  
+  //Applied a conditions to check whether the user's email already exist or not 
+  for (const item in users) {
+    if (req.body.email === users[item]['email']) {
+      return false;
+    }
+  }
+  const id = randomGenerator();
+  
+  users[id] = {
+    id: id,
+    email: req.body.email !== "" ? req.body.email : null, //Applied a conditions to check whether email is an empty string or not
+    password: req.body.password !== "" ? req.body.password : null //Applied a conditions to check whether password is an empty string or not
+  }
+  
+  if (users[id]['email'] === null || users[id]['password'] === null) {
+    return false;
+  }
+
+  return true;
+}
+
 
 app.use(cookieParser());
 app.set("view engine", "ejs");
@@ -131,16 +169,14 @@ app.post("/urls/:id", (req, res) => {
 //Storing Username as a cookie
 
 app.post("/login", (req, res) => {
- 
-for(const key in users){  
-  if (users[key]['email'] === req.body.email){
-        res.cookie('user_id', key);
-        //templateVars = {key: users[key]}
-    }
+  
+  if(loginAuthentication(req, res)){
+    res.redirect('/urls');
   }
+  else {
+   res.sendStatus(404);
+  } 
 
-  //Redirect to /urls/
-  res.redirect('/urls/'); 
 });
 
 //Logout Username by deleting the cookie
@@ -149,30 +185,25 @@ app.post("/logout", (req, res) => {
    
   res.clearCookie('user_id', req.body.user_id);
   //Redirect to /urls/
-   res.redirect("/urls/")
+   res.redirect("/urls/");
+
 });
 
 app.post("/register", (req, res) => {
 
-  //Applied a conditions to check whether the user's email already exist or not 
+  const id = req.body.id;
 
-  for (const item in users) {
-    if (req.body.email === users[item]['email']) {
-      res.sendStatus(404);
-    }
+  if (registerVerification(req, res)) { 
+    res.cookie('user_id', id);
+    //Redirect to /urls/    
+    res.redirect("/urls/");
+  }
+
+  else {
+    res.sendStatus(404);
   }
   
-  const id = randomGenerator();
-  users[id] = {
-    id: id,
-    email: req.body.email !== "" ? req.body.email : res.sendStatus(404), //Applied a conditions to check whether email is an empty string or not
-    password: req.body.password !== "" ? req.body.password : res.sendStatus(404) //Applied a conditions to check whether password is an empty string or not
-  }
-  res.cookie('user_id', id);
-
-  //Redirect to /urls/
-  res.redirect("/urls/");
-   
+ 
 });
 
 app.listen(PORT, () => {
@@ -180,9 +211,7 @@ app.listen(PORT, () => {
 });
 
 
-//pass user object from the front end in the req.body;
-//from that object, fetch the user ID and store it in the cookie.
-//and let the user login
+
 
 
 
