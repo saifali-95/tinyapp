@@ -9,6 +9,11 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+
+app.use(cookieParser());
+app.set("view engine", "ejs");
+
+
 //Random Alphanumeric String Generator Function
 
 function randomGenerator() {
@@ -63,11 +68,6 @@ function registerVerification(req, res) {
 
   return true;
 }
-
-
-app.use(cookieParser());
-app.set("view engine", "ejs");
-
 
 //Library will convert the request body from a Buffer into string that we can read.
 app.use(express.json());
