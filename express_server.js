@@ -150,15 +150,15 @@ app.post("/register", (req, res) => {
 
   for (const item in users) {
     if (req.body.email === users[item]['email']) {
-      res.write("404 eror");
+      res.sendStatus(404);
     }
   }
   
   const id = randomGenerator();
   users[id] = {
     id: id,
-    email: req.body.email !== "" ? req.body.email : res.write("404 error"), //Applied a conditions to check whether email is an empty string or not
-    password: req.body.password !== "" ? req.body.password : res.write("404 error") //Applied a conditions to check whether password is an empty string or not
+    email: req.body.email !== "" ? req.body.email : res.sendStatus(404), //Applied a conditions to check whether email is an empty string or not
+    password: req.body.password !== "" ? req.body.password : res.sendStatus(404) //Applied a conditions to check whether password is an empty string or not
   }
   res.cookie('user_id', id);
 
