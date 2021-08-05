@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 var cookieParser = require('cookie-parser')
-const users ={ NfVOt8: { id: 'NfVOt8', email: 'abc@abc.com', password: '123' } };
+const users ={};
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -59,6 +59,7 @@ function registerVerification(req, res) {
   if (users[id]['email'] === null || users[id]['password'] === null) {
     return false;
   }
+  res.cookie('user_id', id);
 
   return true;
 }
@@ -191,10 +192,8 @@ app.post("/logout", (req, res) => {
 
 app.post("/register", (req, res) => {
 
-  const id = req.body.id;
-
   if (registerVerification(req, res)) { 
-    res.cookie('user_id', id);
+
     //Redirect to /urls/    
     res.redirect("/urls/");
   }
