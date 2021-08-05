@@ -4,14 +4,19 @@ const PORT = 8080; // default port 8080
 var cookieParser = require('cookie-parser')
 const users ={};
 
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
+const urlDatabase = {};
+
 
 
 app.use(cookieParser());
 app.set("view engine", "ejs");
+
+
+//Library will convert the request body from a Buffer into string that we can read.
+app.use(express.json());
+app.use(express.urlencoded({
+  extended: true
+}));
 
 
 //Random Alphanumeric String Generator Function
@@ -69,21 +74,41 @@ function registerVerification(req, res) {
   return true;
 }
 
-//Library will convert the request body from a Buffer into string that we can read.
-app.use(express.json());
-app.use(express.urlencoded({
-  extended: true
-}));
+// Short URL Verification Function
+
+function shortURLVerification (req) {
+  for(const item in urlDatabase) {
+    if (item === req.params.shortURL) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
 
 app.get("/urls/new", (req, res) => {
   const id = req.cookies.user_id;
   const templateVars = {'user': users[id]}
-  res.render("urls_new", templateVars);
+  
+  if(!id) {
+    res.render("login", templateVars);
+  }
+  else{
+    res.render("urls_new", templateVars);
+  }
+  
+  
 });
 
 app.get("/urls/:shortURL", (req, res) => {
   const id = req.cookies.user_id;
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], 'user': users[id]};
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]['longURL'], 'user': users[id]};
+
+  if(!id) {
+    res.redirect('/login');
+  }
+
   res.render("urls_show", templateVars);
 
 });
@@ -110,12 +135,15 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = req.params.shortURL;
-  const urlDatabaseLongUrl = urlDatabase[longURL];
-  
-  //Redirect based on the shortURL from our urlDataBase;
-  res.redirect(urlDatabaseLongUrl);
+  if (!shortURLVerification(req)) {
+    res.sendStatus('404');
+  }
+  else{
+    const urlDatabaseLongUrl = urlDatabase[req.params.shortURL].longURL;
 
+    //Redirect based on the shortURL from our urlDataBase;
+    res.redirect(urlDatabaseLongUrl);
+  }
 });
 
 //Redirecting to Registration Page
@@ -138,10 +166,12 @@ app.get("/login", (req, res) => {
 
 
 app.post("/urls", (req, res) => {
-  
+ 
+  const id = req.cookies.user_id;
   const newShortUrl = randomGenerator();
-  urlDatabase[newShortUrl] = req.body.longURL; 
-
+  
+  urlDatabase[newShortUrl] = {longURL :req.body.longURL, userId : id};
+  
   //Redirect to /urls/:shortURL, where shortURL is the random string we generated
   res.redirect(`/urls/${newShortUrl}`); 
 
@@ -161,10 +191,11 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   const newShortUrl = req.params.id;
   const newLongUrl = req.body.longURL;
-  urlDatabase[newShortUrl] = newLongUrl; 
+  urlDatabase[newShortUrl].longURL = newLongUrl; 
   
   //Redirect to /urls/
   res.redirect('/urls/'); 
+  return;
 });
 
 //Storing Username as a cookie
