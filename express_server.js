@@ -2,6 +2,28 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 var cookieParser = require('cookie-parser')
+const users ={ NfVOt8: { id: 'NfVOt8', email: 'abc@abc.com', password: '123' } };
+
+const urlDatabase = {
+  "b2xVn2": "http://www.lighthouselabs.ca",
+  "9sm5xK": "http://www.google.com"
+};
+
+//Random Alphanumeric String Generator Function
+
+function randomGenerator() {
+  const alphanumericCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const charactersLength = 6;
+  let randomString = "";
+  
+  //Will loop through 6 times and will pick elements randomly from alphanumericCharacters.
+  for (let i = 0; i < charactersLength; i++) {
+    const randomNumber = Math.floor(Math.random() * alphanumericCharacters.length);
+    randomString += alphanumericCharacters[randomNumber];
+    
+  }  
+  return randomString;
+}
 
 
 app.use(cookieParser());
@@ -14,27 +36,23 @@ app.use(express.urlencoded({
   extended: true
 }));
 
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
-
 app.get("/urls/new", (req, res) => {
-  
-  const templateVars = {username: req.cookies.username}
+  const id = req.cookies.user_id;
+  const templateVars = {'user': users[id]}
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies.username};
+  const id = req.cookies.user_id;
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], 'user': users[id]};
   res.render("urls_show", templateVars);
 
 });
 
 app.get("/urls", (req, res) => {
+  const id = req.cookies.user_id
 
-  const templateVars = { urls: urlDatabase, username: req.cookies.username}
+  const templateVars = { urls: urlDatabase, 'user': users[id]}
   res.render("urls_index", templateVars);
 
 
@@ -52,16 +70,6 @@ app.get("/hello", (req, res) => {
 
 });
 
-app.post("/urls", (req, res) => {
-  
-  const newShortUrl = randomGenerator();
-  urlDatabase[newShortUrl] = req.body.longURL; 
-
-  //Redirect to /urls/:shortURL, where shortURL is the random string we generated
-  res.redirect(`/urls/${newShortUrl}`); 
-
-});
-
 app.get("/u/:shortURL", (req, res) => {
   const longURL = req.params.shortURL;
   const urlDatabaseLongUrl = urlDatabase[longURL];
@@ -74,8 +82,20 @@ app.get("/u/:shortURL", (req, res) => {
 //Redirecting to registration page
 
 app.get("/register", (req, res) => {
+  const id = req.cookies.user_id;
+  const templateVars = {'user': users[id]}
+  res.render("register", templateVars);
+
+});
+
+
+app.post("/urls", (req, res) => {
   
-  res.render("register");
+  const newShortUrl = randomGenerator();
+  urlDatabase[newShortUrl] = req.body.longURL; 
+
+  //Redirect to /urls/:shortURL, where shortURL is the random string we generated
+  res.redirect(`/urls/${newShortUrl}`); 
 
 });
 
@@ -102,11 +122,16 @@ app.post("/urls/:id", (req, res) => {
 //Storing Username as a cookie
 
 app.post("/login", (req, res) => {
+//let templateVars;
 
-  res.cookie('username', req.body.username);
-  
-  const cookie = {'username': req.body.username};  
-    //Redirect to /urls/
+ for(const key in users){
+    if (users[key]['email'] === req.body.user_email){
+        res.cookie('user_id', key);
+        //templateVars = {key: users[key]}
+    }
+  }
+
+  //Redirect to /urls/
   res.redirect('/urls/'); 
 });
 
@@ -114,9 +139,24 @@ app.post("/login", (req, res) => {
 
 app.post("/logout", (req, res) => {
    
-  res.clearCookie('username', req.body.username);
+  res.clearCookie('user_id', req.body.user_id);
   //Redirect to /urls/
    res.redirect("/urls/")
+});
+
+app.post("/register", (req, res) => {
+
+  const id = randomGenerator();
+  users[id] = {
+    id: id,
+    email: req.body.email,
+    password: req.body.password
+  }
+  res.cookie('user_id', id);
+
+  //Redirect to /urls/
+  res.redirect("/urls/");
+   
 });
 
 app.listen(PORT, () => {
@@ -124,20 +164,10 @@ app.listen(PORT, () => {
 });
 
 
-//Random Alphanumeric String Generator Function
+//pass user object from the front end in the req.body;
+//from that object, fetch the user ID and store it in the cookie.
+//and let the user login
 
-function randomGenerator() {
-  const alphanumericCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  const charactersLength = 6;
-  let randomString = "";
-  
-  //Will loop through 6 times and will pick elements randomly from alphanumericCharacters.
-  for (let i = 0; i < charactersLength; i++) {
-    const randomNumber = Math.floor(Math.random() * alphanumericCharacters.length);
-    randomString += alphanumericCharacters[randomNumber];
-    
-  }  
-  return randomString;
-}
+
 
 
