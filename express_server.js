@@ -79,12 +79,21 @@ app.get("/u/:shortURL", (req, res) => {
 
 });
 
-//Redirecting to registration page
+//Redirecting to Registration Page
 
 app.get("/register", (req, res) => {
   const id = req.cookies.user_id;
   const templateVars = {'user': users[id]}
   res.render("register", templateVars);
+
+});
+
+//Redirecting to Login Page
+
+app.get("/login", (req, res) => {
+  const id = req.cookies.user_id;
+  const templateVars = {'user': users[id]}
+  res.render("login", templateVars);
 
 });
 
@@ -122,10 +131,9 @@ app.post("/urls/:id", (req, res) => {
 //Storing Username as a cookie
 
 app.post("/login", (req, res) => {
-//let templateVars;
-
- for(const key in users){
-    if (users[key]['email'] === req.body.user_email){
+ 
+for(const key in users){  
+  if (users[key]['email'] === req.body.email){
         res.cookie('user_id', key);
         //templateVars = {key: users[key]}
     }
