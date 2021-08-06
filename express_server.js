@@ -85,7 +85,20 @@ function shortURLVerification (req) {
   return false;
 }
 
+// Return URLS specific to the userID
 
+function urlsForUser(id) {
+  let usersURL = {};
+  
+  for(const url in urlDatabase){
+    
+    if(urlDatabase[url].userId === id) {
+      usersURL[url] =  urlDatabase[url];
+    }
+  } 
+  return usersURL;
+
+}
 
 app.get("/urls/new", (req, res) => {
   const id = req.cookies.user_id;
@@ -103,23 +116,26 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   const id = req.cookies.user_id;
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]['longURL'], 'user': users[id]};
-
+  
   if(!id) {
     res.redirect('/login');
   }
+  else {
+    const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]['longURL'], 'user': users[id]};
+    res.render("urls_show", templateVars);
 
-  res.render("urls_show", templateVars);
+  }
 
+  
 });
 
 app.get("/urls", (req, res) => {
   const id = req.cookies.user_id
+  const currentUser = urlsForUser(id);
+  const templateVars = { urls: urlDatabase, 'user': users[id], currentUser : currentUser}
+  
 
-  const templateVars = { urls: urlDatabase, 'user': users[id]}
   res.render("urls_index", templateVars);
-
-
 });
 
 app.get("/urls.json", (req, res) => {
