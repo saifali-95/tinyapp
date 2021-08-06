@@ -25,7 +25,7 @@ app.use(express.urlencoded({
 
 //Random Alphanumeric String Generator Function
 
-function randomGenerator() {
+const randomGenerator = function() {
   const alphanumericCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   const charactersLength = 6;
   let randomString = "";
@@ -41,7 +41,7 @@ function randomGenerator() {
 
 //Account Registration Verification Function
 
-function registerVerification(req, res) {
+const registerVerification = function(req, res) {
   
   //Applied a conditions to check whether the user's email already exist or not 
   for (const item in users) {
@@ -71,13 +71,14 @@ function registerVerification(req, res) {
 
 //Login Authentication Function
 
-function loginAuthentication(req, res){
+const loginAuthentication = function(req, res) {
   
-  for(const key in users) {  
+  for(const id in users) {  
     const password =  req.body.password;
-    const hashedPassword = users[key]['password'];
-    if (users[key]['email'] === req.body.email && bcrypt.compareSync(password, hashedPassword)) {
-      res.cookie('user_id', key);
+    const hashedPassword = users[id]['password'];
+    
+    if (users[id]['email'] === req.body.email && bcrypt.compareSync(password, hashedPassword)) {
+      req.session.user_id = id;
       return true;
     }
   }
@@ -87,7 +88,7 @@ function loginAuthentication(req, res){
 
 // Short URL Verification Function
 
-function shortURLVerification (req) {
+const shortURLVerification = function(req) {
   for(const item in urlDatabase) {
     if (item === req.params.shortURL) {
       return true;
@@ -96,9 +97,9 @@ function shortURLVerification (req) {
   return false;
 }
 
-// Return URLS specific to the userID
+// Return user specific URLS
 
-function urlsForUser(id) {
+const urlsForUser = function(id) {
   let usersURL = {};
   
   for(const url in urlDatabase){
