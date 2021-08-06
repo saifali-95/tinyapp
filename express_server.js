@@ -1,11 +1,10 @@
 const express = require("express");
 const app = express();
+const bcrypt = require('bcrypt');
 const PORT = 8080; // default port 8080
 var cookieParser = require('cookie-parser')
 const users ={};
-
 const urlDatabase = {};
-
 
 
 app.use(cookieParser());
@@ -35,19 +34,6 @@ function randomGenerator() {
   return randomString;
 }
 
-//Login Authentication Function
-
-function loginAuthentication(req, res){
-  
-  for(const key in users) {  
-    if (users[key]['email'] === req.body.email && users[key]['password'] === req.body.password) {
-      res.cookie('user_id', key);
-      return true;
-    }
-  }
-  return false;
-}
-
 //Account Registration Verification Function
 
 function registerVerification(req, res) {
@@ -59,11 +45,14 @@ function registerVerification(req, res) {
     }
   }
   const id = randomGenerator();
+  const email = req.body.email;
+  const password =  req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
   
   users[id] = {
     id: id,
-    email: req.body.email !== "" ? req.body.email : null, //Applied a conditions to check whether email is an empty string or not
-    password: req.body.password !== "" ? req.body.password : null //Applied a conditions to check whether password is an empty string or not
+    email: email !== "" ? email : null, //Applied a conditions to check whether email is an empty string or not
+    password: password !== "" ? hashedPassword : null //Applied a conditions to check whether password is an empty string or not
   }
   
   if (users[id]['email'] === null || users[id]['password'] === null) {
@@ -73,6 +62,22 @@ function registerVerification(req, res) {
 
   return true;
 }
+
+//Login Authentication Function
+
+function loginAuthentication(req, res){
+  
+  for(const key in users) {  
+    const password =  req.body.password;
+    const hashedPassword = users[key]['password'];
+    if (users[key]['email'] === req.body.email && bcrypt.compareSync(password, hashedPassword)) {
+      res.cookie('user_id', key);
+      return true;
+    }
+  }
+  return false;
+}
+
 
 // Short URL Verification Function
 
