@@ -117,16 +117,20 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   const id = req.cookies.user_id;
   
+  if (urlDatabase[req.params.shortURL] === undefined) {
+    res.send("invalid shortURL");
+    return;
+  }
+
   if(id !== urlDatabase[req.params.shortURL]['userId']) {
     res.redirect('/login');
+    return;
   }
   else {
     const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]['longURL'], 'user': users[id]};
     res.render("urls_show", templateVars);
-
-  }
-
-  
+    return;
+  }  
 });
 
 app.get("/urls", (req, res) => {
