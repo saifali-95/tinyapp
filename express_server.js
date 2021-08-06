@@ -2,19 +2,16 @@ const express = require("express");
 const app = express();
 const bcrypt = require('bcrypt');
 const PORT = 8080; // default port 8080
-const cookieSession = require('cookie-session')
+const cookieSession = require('cookie-session');
+const e = require("express");
 const users ={};
 const urlDatabase = {};
-
 
 app.use(cookieSession({
   name: 'session',
   keys: ['key1', 'key2']
 }))
-
-
 app.set("view engine", "ejs");
-
 
 //Library will convert the request body from a Buffer into string that we can read.
 app.use(express.json());
@@ -39,48 +36,66 @@ const randomGenerator = function() {
   return randomString;
 }
 
-//Account Registration Verification Function
+//Finding User by helping function
 
-const registerVerification = function(req, res) {
-  
-  //Applied a conditions to check whether the user's email already exist or not 
-  for (const item in users) {
-    if (req.body.email === users[item]['email']) {
-      return false;
+const getUserByEmail = function(email, database) {
+
+  for (const id in database) {
+    if (database[id]['email'] === email) {
+      const user = database[id];
+      return user;
     }
   }
-  const id = randomGenerator();
-  const email = req.body.email;
-  const password =  req.body.password;
-  const hashedPassword = bcrypt.hashSync(password, 10);
-  
-  users[id] = {
-    id: id,
-    email: email !== "" ? email : null, //Applied a conditions to check whether email is an empty string or not
-    password: password !== "" ? hashedPassword : null //Applied a conditions to check whether password is an empty string or not
-  }
-  
-  if (users[id]['email'] === null || users[id]['password'] === null) {
-    return false;
-  }
-  
-  req.session.user_id = id;
+  return false;
+};
 
-  return true;
+
+//Account Registration Verification Function
+
+const registerVerification = function(req) {
+  
+  const existingEmail = req.body.email;
+  const user = getUserByEmail(existingEmail, users);
+
+  //Applied a conditions to check whether the user's email already exist or not 
+  if(!user) {
+    
+    const id = randomGenerator();
+    const email = req.body.email;
+    const password =  req.body.password;
+    const hashedPassword = bcrypt.hashSync(password, 10);
+    
+    users[id] = {
+      id: id,
+      email: email !== "" ? email : null, //Applied a conditions to check whether email is an empty string or not
+      password: password !== "" ? hashedPassword : null //Applied a conditions to check whether password is an empty string or not
+    }
+    
+    if (users[id]['email'] === null || users[id]['password'] === null) {
+      return false;
+    }
+    
+    req.session.user_id = id;
+  
+    return true;
+  }
+  
+  return false;
+
 }
 
 //Login Authentication Function
 
-const loginAuthentication = function(req, res) {
+const loginAuthentication = function(req) {
+  const loginEmail = req.body.email;
+  const loginUser = getUserByEmail(loginEmail, users);
+  const loginID = loginUser.id;
+  const password =  req.body.password;
+  const hashedPassword = loginUser['password'];
   
-  for(const id in users) {  
-    const password =  req.body.password;
-    const hashedPassword = users[id]['password'];
-    
-    if (users[id]['email'] === req.body.email && bcrypt.compareSync(password, hashedPassword)) {
-      req.session.user_id = id;
-      return true;
-    }
+  if (loginUser && bcrypt.compareSync(password, hashedPassword)) {
+    req.session.user_id = loginID;
+    return true;
   }
   return false;
 }
