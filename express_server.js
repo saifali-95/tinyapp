@@ -117,7 +117,7 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   const id = req.cookies.user_id;
   
-  if(!id) {
+  if(id !== urlDatabase[req.params.shortURL]['userId']) {
     res.redirect('/login');
   }
   else {
@@ -196,10 +196,17 @@ app.post("/urls", (req, res) => {
 //To delete the shortURL and longURL from the urlDataBase
 app.post("/urls/:shortURL/delete", (req, res) => {
   const newShortUrl = req.params.shortURL;
-  delete urlDatabase[newShortUrl];
 
-  //Redirect to /urls/
-  res.redirect('/urls/'); 
+  if(req.cookies.user_id === urlDatabase[newShortUrl]['userId']) {
+    delete urlDatabase[newShortUrl];
+    //Redirect to /urls/
+    res.redirect('/urls/');
+    return;
+  }
+  else{
+    res.redirect('login');
+  }
+
 });
 
 //Route to edit the longURL for the given shortURL
@@ -207,11 +214,17 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   const newShortUrl = req.params.id;
   const newLongUrl = req.body.longURL;
-  urlDatabase[newShortUrl].longURL = newLongUrl; 
   
-  //Redirect to /urls/
-  res.redirect('/urls/'); 
-  return;
+  if (req.cookies.user_id === urlDatabase[newShortUrl]['userId']) {
+    urlDatabase[newShortUrl].longURL = newLongUrl; 
+    
+    //Redirect to /urls/
+    res.redirect('/urls/'); 
+    return;
+  }
+  else {
+    res.redirect('login');
+  }
 });
 
 //Storing Username as a cookie
