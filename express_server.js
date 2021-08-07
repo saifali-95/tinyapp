@@ -121,10 +121,10 @@ app.get("/urls/new", (req, res) => {
   
   if(!id) {
     res.render("login", templateVars);
+    return;
   }
-  else{
-    res.render("urls_new", templateVars);
-  }  
+  res.render("urls_new", templateVars);  
+  return;
 });
 
 app.get("/urls/:shortURL", (req, res) => {
@@ -147,8 +147,8 @@ app.get("/urls/:shortURL", (req, res) => {
   }
 
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]['longURL'], 'user': users[id]};
-    res.render("urls_show", templateVars);
-    return; 
+  res.render("urls_show", templateVars);
+  return; 
 });
 
 app.get("/urls", (req, res) => {
@@ -157,24 +157,27 @@ app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase, 'user': users[id], currentUser : currentUser}
   
   res.render("urls_index", templateVars);
+  return;
 });
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
+  return;
 });
 
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
+  return;
 });
 
 app.get("/u/:shortURL", (req, res) => {
   if (!shortURLVerification(req)) {
     res.send('longURL not found for the shortURL provided');
-  } else {
-    const urlDatabaseLongUrl = urlDatabase[req.params.shortURL].longURL;
-    //Redirect based on the shortURL from our urlDataBase;
-    res.redirect(urlDatabaseLongUrl);
+    return;
   }
+  const urlDatabaseLongUrl = urlDatabase[req.params.shortURL].longURL;
+  res.redirect(urlDatabaseLongUrl);
+  return;
 });
 
 //Redirecting to Registration Page
@@ -255,10 +258,10 @@ app.post("/urls/:id", (req, res) => {
 app.post("/login", (req, res) => {
   if(loginAuthentication(req, res)){
     res.redirect('/urls');
+    return;
   }
-  else {
    res.send('User does not exist');
-  } 
+   return;
 });
 
 //Logout Username by deleting the cookie
@@ -266,14 +269,15 @@ app.post("/login", (req, res) => {
 app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect("/urls/");
+  return;
 });
 
 app.post("/register", (req, res) => {
   if (registerVerification(req, res)) { 
     res.redirect("/urls/");
-  } else {
-    res.send('User already exist');
+    return;
   } 
+  res.send('User already exist'); 
 });
 
 app.listen(PORT, () => {
