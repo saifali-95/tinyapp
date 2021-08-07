@@ -3,10 +3,15 @@ const app = express();
 const bcrypt = require('bcrypt');
 const PORT = 8080; // default port 8080
 const cookieSession = require('cookie-session');
-const users ={};
+const users = {};
 const urlDatabase = {};
+const {getUserByEmail} = require('./helpers');
 
-const {getUserByEmail} = require('./helpers')
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key1', 'key2']
+}));
+app.set("view engine", "ejs");
 
 //Random Alphanumeric String Generator Function
 
@@ -18,10 +23,10 @@ const randomGenerator = function() {
   //Will loop through 6 times and will pick elements randomly from alphanumericCharacters.
   for (let i = 0; i < charactersLength; i++) {
     const randomNumber = Math.floor(Math.random() * alphanumericCharacters.length);
-    randomString += alphanumericCharacters[randomNumber];  
-  }  
+    randomString += alphanumericCharacters[randomNumber];
+  }
   return randomString;
-}
+};
 
 //Account Registration Verification Function
 
@@ -29,8 +34,8 @@ const registerVerification = function(req) {
   const existingEmail = req.body.email;
   const user = getUserByEmail(existingEmail, users);
 
-  //Applied a conditions to check whether the user's email already exist or not 
-  if(!user) {
+  //Applied a conditions to check whether the user's email already exist or not
+  if (!user) {
     const id = randomGenerator();
     const email = req.body.email;
     const password =  req.body.password;
@@ -40,15 +45,15 @@ const registerVerification = function(req) {
       id: id,
       email: email !== "" ? email : null, //Applied a conditions to check whether email is an empty string or not
       password: password !== "" ? hashedPassword : null //Applied a conditions to check whether password is an empty string or not
-    }
+    };
     if (users[id]['email'] === null || users[id]['password'] === null) {
       return false;
     }
     req.session.user_id = id;
     return true;
-  }  
+  }
   return false;
-}
+};
 
 //Login Authentication Function
 
@@ -64,38 +69,31 @@ const loginAuthentication = function(req) {
     return true;
   }
   return false;
-}
-
+};
 
 // Short URL Verification Function
 
 const shortURLVerification = function(req) {
-  for(const item in urlDatabase) {
+  for (const item in urlDatabase) {
     if (item === req.params.shortURL) {
       return true;
     }
   }
   return false;
-}
+};
 
 // Return user specific URLS
 
 const urlsForUser = function(id) {
   let usersURL = {};
   
-  for(const url in urlDatabase) {
-    if(urlDatabase[url].userId === id) {
+  for (const url in urlDatabase) {
+    if (urlDatabase[url].userId === id) {
       usersURL[url] =  urlDatabase[url];
     }
-  } 
+  }
   return usersURL;
-}
-
-app.use(cookieSession({
-  name: 'session',
-  keys: ['key1', 'key2']
-}))
-app.set("view engine", "ejs");
+};
 
 //Library will convert the request body from a Buffer into string that we can read.
 app.use(express.json());
@@ -105,25 +103,24 @@ app.use(express.urlencoded({
 
 app.get("/", (req, res) => {
   const id = req.session.user_id;
-  const templateVars = {'user': users[id]}
   
-  if(!id) {
+  if (!id) {
     res.redirect('login');
     return;
   }
-    res.redirect('/urls');
-    return;  
+  res.redirect('/urls');
+  return;
 });
 
 app.get("/urls/new", (req, res) => {
   const id = req.session.user_id;
-  const templateVars = {'user': users[id]}
+  const templateVars = {'user': users[id]};
   
-  if(!id) {
+  if (!id) {
     res.render("login", templateVars);
     return;
   }
-  res.render("urls_new", templateVars);  
+  res.render("urls_new", templateVars);
   return;
 });
 
@@ -141,20 +138,20 @@ app.get("/urls/:shortURL", (req, res) => {
     return;
   }
 
-  if(id !== urlDatabase[req.params.shortURL]['userId']) {
+  if (id !== urlDatabase[req.params.shortURL]['userId']) {
     res.send('shortURL does not belong to you');
     return;
   }
 
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]['longURL'], 'user': users[id]};
   res.render("urls_show", templateVars);
-  return; 
+  return;
 });
 
 app.get("/urls", (req, res) => {
-  const id = req.session.user_id
+  const id = req.session.user_id;
   const currentUser = urlsForUser(id);
-  const templateVars = { urls: urlDatabase, 'user': users[id], currentUser : currentUser}
+  const templateVars = { urls: urlDatabase, 'user': users[id], currentUser : currentUser};
   
   res.render("urls_index", templateVars);
   return;
@@ -184,10 +181,10 @@ app.get("/u/:shortURL", (req, res) => {
 
 app.get("/register", (req, res) => {
   const id = req.session.user_id;
-  const templateVars = {'user': users[id]}
+  const templateVars = {'user': users[id]};
   
-  if(id) {
-    res.redirect('/urls'); 
+  if (id) {
+    res.redirect('/urls');
     return;
   }
   res.render("register", templateVars);
@@ -198,10 +195,10 @@ app.get("/register", (req, res) => {
 
 app.get("/login", (req, res) => {
   const id = req.session.user_id;
-  const templateVars = {'user': users[id]}
+  const templateVars = {'user': users[id]};
 
-  if(id) {
-    res.redirect('/urls'); 
+  if (id) {
+    res.redirect('/urls');
     return;
   }
   res.render("login", templateVars);
@@ -218,7 +215,7 @@ app.post("/urls", (req, res) => {
   }
   urlDatabase[newShortUrl] = {longURL :req.body.longURL, userId : id};
   //Redirect to /urls/:shortURL, where shortURL is the random string we generated
-  res.redirect(`/urls/${newShortUrl}`); 
+  res.redirect(`/urls/${newShortUrl}`);
   return;
 });
 
@@ -228,7 +225,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   const newShortUrl = req.params.shortURL;
   const id = req.session.user_id;
 
-  if(req.session.user_id === urlDatabase[newShortUrl]['userId']) {
+  if (id === urlDatabase[newShortUrl]['userId']) {
     delete urlDatabase[newShortUrl];
     res.redirect('/urls/');
     return;
@@ -245,8 +242,8 @@ app.post("/urls/:id", (req, res) => {
   const newLongUrl = req.body.longURL;
   
   if (req.session.user_id === urlDatabase[newShortUrl]['userId']) {
-    urlDatabase[newShortUrl].longURL = newLongUrl; 
-    res.redirect('/urls/'); 
+    urlDatabase[newShortUrl].longURL = newLongUrl;
+    res.redirect('/urls/');
     return;
   }
   res.redirect('login');
@@ -256,12 +253,12 @@ app.post("/urls/:id", (req, res) => {
 //Storing Username as a cookie
 
 app.post("/login", (req, res) => {
-  if(loginAuthentication(req, res)){
+  if (loginAuthentication(req, res)) {
     res.redirect('/urls');
     return;
   }
-   res.send('User does not exist');
-   return;
+  res.send('User does not exist');
+  return;
 });
 
 //Logout Username by deleting the cookie
@@ -273,11 +270,11 @@ app.post("/logout", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  if (registerVerification(req, res)) { 
-    res.redirect("/urls/");
-    return;
-  } 
-  res.send('User already exist'); 
+  if (registerVerification(req, res)) {
+  res.redirect("/urls/");
+  return;
+  }
+  res.send('User already exist');
 });
 
 app.listen(PORT, () => {
