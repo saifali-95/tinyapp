@@ -3,9 +3,10 @@ const app = express();
 const bcrypt = require('bcrypt');
 const PORT = 8080; // default port 8080
 const cookieSession = require('cookie-session');
-const e = require("express");
 const users ={};
 const urlDatabase = {};
+
+const {getUserByEmail} = require('./helpers')
 
 app.use(cookieSession({
   name: 'session',
@@ -35,20 +36,6 @@ const randomGenerator = function() {
   }  
   return randomString;
 }
-
-//Finding User by helping function
-
-const getUserByEmail = function(email, database) {
-
-  for (const id in database) {
-    if (database[id]['email'] === email) {
-      const user = database[id];
-      return user;
-    }
-  }
-  return false;
-};
-
 
 //Account Registration Verification Function
 
