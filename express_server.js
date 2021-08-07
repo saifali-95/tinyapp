@@ -182,7 +182,13 @@ app.get("/u/:shortURL", (req, res) => {
 app.get("/register", (req, res) => {
   const id = req.session.user_id;
   const templateVars = {'user': users[id]}
+  
+  if(id) {
+    res.redirect('/urls'); 
+    return;
+  }
   res.render("register", templateVars);
+  return;
 });
 
 //Redirecting to Login Page
@@ -190,6 +196,11 @@ app.get("/register", (req, res) => {
 app.get("/login", (req, res) => {
   const id = req.session.user_id;
   const templateVars = {'user': users[id]}
+
+  if(id) {
+    res.redirect('/urls'); 
+    return;
+  }
   res.render("login", templateVars);
   return;
 });
@@ -212,13 +223,15 @@ app.post("/urls", (req, res) => {
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   const newShortUrl = req.params.shortURL;
+  const id = req.session.user_id;
 
   if(req.session.user_id === urlDatabase[newShortUrl]['userId']) {
     delete urlDatabase[newShortUrl];
     res.redirect('/urls/');
     return;
   }
-  res.redirect('login');
+
+  res.send('shortURL does not belong to you');
   return;
 });
 
@@ -244,7 +257,7 @@ app.post("/login", (req, res) => {
     res.redirect('/urls');
   }
   else {
-   res.sendStatus(404);
+   res.send('User does not exist');
   } 
 });
 
@@ -259,7 +272,7 @@ app.post("/register", (req, res) => {
   if (registerVerification(req, res)) { 
     res.redirect("/urls/");
   } else {
-    res.sendStatus(404);
+    res.send('User already exist');
   } 
 });
 
